@@ -1,0 +1,798 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --bg-dark: #09131b;
+    --card-bg: rgba(16, 29, 43, 0.85);
+    --card-border: rgba(64, 169, 255, 0.25);
+    --primary: #00d2ff;
+    --primary-glow: rgba(0, 210, 255, 0.4);
+    --secondary: #3a7bd5;
+    --accent: #ff9f43;
+    --accent-glow: rgba(255, 159, 67, 0.5);
+    --danger: #ff5252;
+    --success: #1dd1a1;
+    --gold: #fecb2e;
+    --text: #f0f6fc;
+    --text-muted: #8b9eb0;
+    --radius-lg: 20px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text);
+}
+
+#game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle at center, #102638 0%, #060d14 100%);
+    overflow: hidden;
+}
+
+canvas#gameCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    cursor: crosshair;
+}
+
+/* UI Overlay Layer */
+.ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+}
+
+.ui-layer * {
+    pointer-events: auto;
+}
+
+/* Top Header HUD */
+.top-hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 15px;
+}
+
+.brand-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--card-border);
+    padding: 10px 20px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+}
+
+.brand-title h1 {
+    font-family: 'Fredoka', cursive;
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, #00d2ff, #92fe9d);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 0.5px;
+}
+
+.stats-bar {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--card-border);
+    padding: 10px 24px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.stat-icon {
+    font-size: 1.3rem;
+}
+
+.stat-value {
+    color: var(--gold);
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.xp-container {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 120px;
+}
+
+.xp-bar-bg {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.xp-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+    border-radius: 4px;
+    transition: width 0.4s ease;
+}
+
+.xp-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: right;
+}
+
+.nav-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.icon-btn {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    padding: 12px;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow);
+    position: relative;
+}
+
+.icon-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    border-color: var(--primary);
+    box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.icon-btn:active {
+    transform: translateY(0) scale(0.95);
+}
+
+.badge-dot {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    background: var(--danger);
+    border-radius: 50%;
+    border: 2px solid var(--bg-dark);
+}
+
+/* Center Action HUD (Casting / Reeling Instructions & Power Meter) */
+.center-hud {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.instruction-toast {
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--card-border);
+    padding: 14px 28px;
+    border-radius: var(--radius-lg);
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: center;
+    box-shadow: var(--shadow);
+    animation: floatAnim 3s infinite ease-in-out;
+    letter-spacing: 0.5px;
+}
+
+.instruction-toast span.highlight {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+@keyframes floatAnim {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+/* Power Bar for Casting */
+.power-meter-container {
+    width: 320px;
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--card-border);
+    padding: 14px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: var(--shadow);
+}
+
+.power-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.power-bar-bg {
+    width: 100%;
+    height: 20px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.power-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #1dd1a1, #ff9f43, #ff5252);
+    border-radius: 10px;
+    transition: width 0.05s linear;
+}
+
+/* Tension Gauge for Reeling Mini-Game */
+.tension-container {
+    width: 340px;
+    background: rgba(10, 20, 30, 0.9);
+    backdrop-filter: blur(16px);
+    border: 2px solid var(--card-border);
+    padding: 16px 20px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+}
+
+.tension-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tension-title {
+    font-family: 'Fredoka', cursive;
+    font-size: 1.1rem;
+    color: #ff9f43;
+}
+
+.fish-stamina-bar {
+    width: 100%;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.fish-stamina-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #ff5252, #ff9f43);
+    transition: width 0.1s linear;
+}
+
+.tension-track {
+    width: 100%;
+    height: 32px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.tension-safe-zone {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background: rgba(29, 209, 161, 0.35);
+    border-left: 2px solid #1dd1a1;
+    border-right: 2px solid #1dd1a1;
+    box-shadow: 0 0 10px rgba(29, 209, 161, 0.5);
+    transition: left 0.1s ease, width 0.1s ease;
+}
+
+.tension-needle {
+    position: absolute;
+    top: -2px;
+    width: 6px;
+    height: 36px;
+    background: #ffffff;
+    border-radius: 3px;
+    box-shadow: 0 0 10px #ffffff, 0 0 20px var(--primary);
+    transform: translateX(-50%);
+    transition: left 0.04s linear;
+}
+
+.tension-status-text {
+    text-align: center;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.tension-status-text.ok { color: var(--success); }
+.tension-status-text.warning { color: var(--accent); }
+.tension-status-text.danger { color: var(--danger); }
+
+/* Bottom Action Bar */
+.bottom-hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.gear-slots {
+    display: flex;
+    gap: 12px;
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--card-border);
+    padding: 10px 16px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+}
+
+.gear-slot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.gear-slot:hover {
+    border-color: var(--primary);
+    background: rgba(0, 210, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+.gear-slot .slot-icon {
+    font-size: 1.2rem;
+}
+
+.gear-slot .slot-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.gear-slot .slot-name {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.gear-slot .slot-sub {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.cast-btn {
+    background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+    color: #ffffff;
+    font-family: 'Fredoka', cursive;
+    font-size: 1.4rem;
+    padding: 16px 40px;
+    border: none;
+    border-radius: 40px;
+    box-shadow: 0 10px 25px rgba(0, 210, 255, 0.4);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cast-btn:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 15px 30px rgba(0, 210, 255, 0.6);
+}
+
+.cast-btn:active {
+    transform: translateY(0) scale(0.97);
+}
+
+.cast-btn.reeling {
+    background: linear-gradient(135deg, #ff9f43 0%, #ff5252 100%);
+    box-shadow: 0 10px 25px rgba(255, 159, 67, 0.5);
+}
+
+/* Modals Overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(4, 10, 16, 0.75);
+    backdrop-filter: blur(10px);
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 850px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+    transform: scale(0.95);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-overlay.active .modal-content {
+    transform: scale(1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 28px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header h2 {
+    font-family: 'Fredoka', cursive;
+    font-size: 1.6rem;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.close-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: var(--text);
+    font-size: 1.5rem;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.close-btn:hover {
+    background: var(--danger);
+}
+
+.modal-body {
+    padding: 24px 28px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Shop Tabs */
+.tab-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+}
+
+.tab-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab-btn.active {
+    background: rgba(0, 210, 255, 0.15);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* Cards Grid */
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 18px;
+}
+
+.item-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.item-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-3px);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.item-card.equipped {
+    border-color: var(--success);
+    background: rgba(29, 209, 161, 0.08);
+}
+
+.item-icon {
+    font-size: 2.8rem;
+    text-align: center;
+    margin: 6px 0;
+}
+
+.item-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.item-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    flex: 1;
+}
+
+.item-stats {
+    font-size: 0.8rem;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.item-action-btn {
+    width: 100%;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+}
+
+.buy-btn {
+    background: var(--gold);
+    color: #1a1a1a;
+}
+.buy-btn:hover {
+    background: #ffd659;
+}
+
+.equip-btn {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--text);
+}
+.equip-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.equipped-btn {
+    background: var(--success);
+    color: #1a1a1a;
+    cursor: default;
+}
+
+/* Fish Catch Summary Modal (Victory Screen) */
+.catch-modal {
+    text-align: center;
+    padding: 20px;
+}
+
+.catch-image-container {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    margin: 0 auto 15px auto;
+    background: radial-gradient(circle, rgba(0,210,255,0.2) 0%, rgba(0,0,0,0) 70%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.catch-fish-icon {
+    font-size: 5.5rem;
+    animation: catchBounce 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes catchBounce {
+    0% { transform: scale(0) rotate(-20deg); }
+    70% { transform: scale(1.2) rotate(10deg); }
+    100% { transform: scale(1) rotate(0); }
+}
+
+.rarity-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+}
+
+.rarity-common { background: #8b9eb0; color: #0d1b2a; }
+.rarity-rare { background: #3a7bd5; color: #fff; }
+.rarity-epic { background: #a55eea; color: #fff; }
+.rarity-legendary { background: #ff9f43; color: #fff; box-shadow: 0 0 15px rgba(255,159,67,0.6); }
+.rarity-mythic { background: linear-gradient(135deg, #ff007f, #7f00ff); color: #fff; box-shadow: 0 0 20px rgba(255,0,127,0.8); }
+
+.catch-name {
+    font-family: 'Fredoka', cursive;
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.catch-details {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 1rem;
+    margin-bottom: 15px;
+    color: var(--text-muted);
+}
+
+.catch-details span {
+    color: var(--text);
+    font-weight: 700;
+}
+
+.catch-desc {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    max-width: 450px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.btn-group {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.primary-btn {
+    background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+    color: #fff;
+    padding: 12px 30px;
+    border-radius: 30px;
+    border: none;
+    font-weight: 700;
+    font-size: 1.05rem;
+    font-family: 'Outfit', sans-serif;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(0, 210, 255, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.primary-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 210, 255, 0.6);
+}
+
+/* Quests List */
+.quest-item {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.quest-info h4 {
+    font-size: 1.05rem;
+    margin-bottom: 4px;
+}
+
+.quest-info p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.quest-reward {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+    .top-hud { flex-direction: column; align-items: stretch; gap: 10px; }
+    .brand-title h1 { font-size: 1.2rem; }
+    .stats-bar { padding: 8px 14px; font-size: 0.9rem; justify-content: space-between; }
+    .power-meter-container, .tension-container { width: 90vw; }
+    .cast-btn { padding: 14px 28px; font-size: 1.2rem; }
+}
