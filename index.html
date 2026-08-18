@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mancing Mania Mania - Game Simulator Memancing Interactive</title>
+    <meta name="description" content="Game Mancing Mania simulator 2D modern dengan grafik canvas 60fps, sistem toko joran & umpan, 15+ spesies ikan, mini-game tension reel, dan efek suara realistis.">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- 60FPS HTML5 Canvas -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- UI HUD Layer -->
+        <div class="ui-layer">
+            <!-- Top Navigation & Stats HUD -->
+            <div class="top-hud">
+                <div class="brand-title">
+                    <span style="font-size:1.6rem;">🎣</span>
+                    <h1>MANCING MANIA</h1>
+                </div>
+
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <span class="stat-icon">🪙</span>
+                        <span id="hud-coins" class="stat-value">0</span>
+                    </div>
+
+                    <div class="stat-item">
+                        <span class="stat-icon">⭐</span>
+                        <span>Lv. <b id="hud-level">1</b></span>
+                    </div>
+
+                    <div class="xp-container">
+                        <div class="xp-bar-bg">
+                            <div id="hud-xp-fill" class="xp-bar-fill"></div>
+                        </div>
+                        <span id="hud-xp-text" class="xp-text">0 / 100 XP</span>
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button id="btn-shop" class="icon-btn" title="Toko Peralatan">🛍️</button>
+                    <button id="btn-log" class="icon-btn" title="Buku Koleksi Ikan">📖</button>
+                    <button id="btn-quests" class="icon-btn" title="Misi Harian">📜<span class="badge-dot"></span></button>
+                    <button id="btn-audio" class="icon-btn" title="Pengaturan Suara">🔊</button>
+                </div>
+            </div>
+
+            <!-- Center Gameplay Action HUD -->
+            <div class="center-hud">
+                <div id="instruction-toast" class="instruction-toast">
+                    <span id="instruction-text">Klik / Sentuh <b>LEMPAR KAIL</b> (atau Tekan Spasi) untuk Memulai!</span>
+                </div>
+
+                <!-- Casting Power Meter -->
+                <div id="power-meter" class="power-meter-container" style="display: none;">
+                    <div class="power-bar-label">
+                        <span>KEKUATAN LEMPARAN</span>
+                        <span>TAHAN UNTUK MELEMPAR</span>
+                    </div>
+                    <div class="power-bar-bg">
+                        <div id="power-bar-fill" class="power-bar-fill"></div>
+                    </div>
+                </div>
+
+                <!-- Reeling Tension Gauge -->
+                <div id="tension-gauge" class="tension-container" style="display: none;">
+                    <div class="tension-header">
+                        <span class="tension-title">PERTARUNGAN IKAN!</span>
+                        <div style="width: 50%;">
+                            <div class="fish-stamina-bar">
+                                <div id="fish-stamina-fill" class="fish-stamina-fill"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tension-track">
+                        <div id="tension-safe-zone" class="tension-safe-zone"></div>
+                        <div id="tension-needle" class="tension-needle"></div>
+                    </div>
+
+                    <div id="tension-status-text" class="tension-status-text ok">
+                        🟢 ZONA AMAN - TAHAN UNTUK MENGGULUNG!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Action & Equipment Slots Bar -->
+            <div class="bottom-hud">
+                <div class="gear-slots">
+                    <div class="gear-slot" title="Joran">
+                        <span class="slot-icon">🎣</span>
+                        <div class="slot-info">
+                            <span class="slot-sub">Joran</span>
+                            <span id="slot-rod-name" class="slot-name">Joran Bambu</span>
+                        </div>
+                    </div>
+
+                    <div class="gear-slot" title="Senar">
+                        <span class="slot-icon">🧵</span>
+                        <div class="slot-info">
+                            <span class="slot-sub">Senar</span>
+                            <span id="slot-line-name" class="slot-name">Senar Nilon</span>
+                        </div>
+                    </div>
+
+                    <div class="gear-slot" title="Umpan">
+                        <span class="slot-icon">🪱</span>
+                        <div class="slot-info">
+                            <span class="slot-sub">Umpan</span>
+                            <span id="slot-bait-name" class="slot-name">Cacing Sawah</span>
+                        </div>
+                    </div>
+
+                    <div class="gear-slot" title="Lokasi">
+                        <span class="slot-icon">🏞️</span>
+                        <div class="slot-info">
+                            <span class="slot-sub">Lokasi</span>
+                            <span id="slot-spot-name" class="slot-name">Danau Tenang</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="btn-main-action" class="cast-btn">
+                    🎣 LEMPAR KAIL
+                </button>
+            </div>
+        </div>
+
+        <!-- MODAL: Toko Peralatan (Shop) -->
+        <div id="modal-shop" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🛍️ Toko Peralatan Mancing</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <div id="shop-items-container" class="modal-body"></div>
+            </div>
+        </div>
+
+        <!-- MODAL: Buku Koleksi Ikan (Aquarium Logbook) -->
+        <div id="modal-logbook" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>📖 Encylopedia & Koleksi Ikan</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <div id="logbook-items-container" class="modal-body"></div>
+            </div>
+        </div>
+
+        <!-- MODAL: Misi Harian (Quests) -->
+        <div id="modal-quests" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>📜 Misi Harian & Pencapaian</h2>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <div id="quests-items-container" class="modal-body"></div>
+            </div>
+        </div>
+
+        <!-- MODAL: Tangkapan Berhasil (Catch Summary Victory Modal) -->
+        <div id="modal-catch" class="modal-overlay">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-body catch-modal">
+                    <div class="catch-image-container">
+                        <span id="catch-icon" class="catch-fish-icon">🐟</span>
+                    </div>
+                    <span id="catch-rarity" class="rarity-badge rarity-common">COMMON</span>
+                    <h2 id="catch-name" class="catch-name">Ikan Nila</h2>
+                    
+                    <div class="catch-details">
+                        <div>Berat: <span id="catch-weight">1.50 kg</span></div>
+                        <div>Harga: <span id="catch-price" style="color:var(--gold);">+🪙 45</span></div>
+                        <div>XP: <span id="catch-xp" style="color:var(--primary);">+⭐ 15</span></div>
+                    </div>
+
+                    <p id="catch-desc" class="catch-desc">Deskripsi ikan akan muncul di sini.</p>
+
+                    <div class="btn-group">
+                        <button id="btn-catch-continue" class="primary-btn">Simpan & Lanjut 🎣</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/audio.js"></script>
+    <script src="js/fishData.js"></script>
+    <script src="js/shopData.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/canvasRenderer.js"></script>
+    <script src="js/minigame.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
